@@ -92,9 +92,9 @@ npm install
 # 2. Configure — copy the template and fill in DATABASE_URL / DIRECT_URL
 cp .env.example .env
 
-# 3. Create the schema and seed the demo data
-npm run prisma:deploy --workspace @lmd/api    # apply migrations
-npm run seed                                   # 8 zones, ~46 pincodes, rate cards, users
+# 3. Create the schema and seed the demo data (run from the repo root)
+npm run prisma:deploy    # apply migrations (reads .env at the repo root)
+npm run seed             # 8 zones, ~46 pincodes, rate cards, users
 
 # 4. Run both apps (API :4000, web :3000)
 npm run dev

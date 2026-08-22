@@ -17,7 +17,10 @@
     "typecheck": "npm run build --workspace @lmd/shared && npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "seed": "npm run seed --workspace @lmd/api",
+    "prisma:generate": "prisma generate --schema apps/api/prisma/schema.prisma",
+    "prisma:deploy": "prisma migrate deploy --schema apps/api/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema apps/api/prisma/schema.prisma",
+    "seed": "TS_NODE_PROJECT=apps/api/tsconfig.json node --env-file=.env -r ts-node/register apps/api/prisma/seed.ts",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build && bash scripts/verify-submission.sh"
   }
 }
