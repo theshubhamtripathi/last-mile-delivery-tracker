@@ -15,6 +15,11 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ZonesModule } from './modules/zones/zones.module';
 import { RatingModule } from './modules/rating/rating.module';
+import { TrackingModule } from './modules/tracking/tracking.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AssignmentModule } from './modules/assignment/assignment.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { AgentsModule } from './modules/agents/agents.module';
 
 @Module({
   imports: [
@@ -30,10 +35,15 @@ import { RatingModule } from './modules/rating/rating.module';
     JwtModule.register({}),
     PrismaModule,
     AdminModule,
+    TrackingModule,
+    NotificationsModule,
     HealthModule,
     AuthModule,
     ZonesModule,
     RatingModule,
+    AssignmentModule,
+    OrdersModule,
+    AgentsModule,
   ],
   providers: [
     // Order matters: authenticate, then authorize, then rate-limit.
