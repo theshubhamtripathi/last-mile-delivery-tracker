@@ -12,6 +12,9 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { ZonesModule } from './modules/zones/zones.module';
+import { RatingModule } from './modules/rating/rating.module';
 
 @Module({
   imports: [
@@ -26,8 +29,11 @@ import { AuthModule } from './modules/auth/auth.module';
     ScheduleModule.forRoot(),
     JwtModule.register({}),
     PrismaModule,
+    AdminModule,
     HealthModule,
     AuthModule,
+    ZonesModule,
+    RatingModule,
   ],
   providers: [
     // Order matters: authenticate, then authorize, then rate-limit.
