@@ -1,0 +1,23 @@
+{
+  "name": "last-mile-delivery-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Last-mile logistics platform: configurable rate engine, explainable auto-assignment, immutable tracking history.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @lmd/shared && npm run build --workspace @lmd/api && npm run build --workspace @lmd/web",
+    "dev": "npm run dev --workspace @lmd/api & npm run dev --workspace @lmd/web",
+    "typecheck": "npm run build --workspace @lmd/shared && npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "seed": "npm run seed --workspace @lmd/api",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build && bash scripts/verify-submission.sh"
+  }
+}

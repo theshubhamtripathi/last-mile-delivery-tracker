@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+build/
+out/
+.next/
+coverage/
+*.log
+.DS_Store
+.vscode/
+.idea/
+.claude/
+CLAUDE.md
