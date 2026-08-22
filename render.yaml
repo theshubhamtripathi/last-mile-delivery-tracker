@@ -1,0 +1,47 @@
+# Render blueprint for the API (apps/api). Neon supplies PostgreSQL; the web app
+# deploys to Vercel. Import this repo on Render as a Blueprint, then set the
+# secret env vars (DATABASE_URL, DIRECT_URL, JWT_*) in the dashboard.
+services:
+  - type: web
+    name: lmd-api
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: >
+      npm ci &&
+      npm run build --workspace @lmd/shared &&
+      npm run prisma:generate --workspace @lmd/api &&
+      npm run build --workspace @lmd/api &&
+      npm run prisma:deploy --workspace @lmd/api
+    startCommand: node apps/api/dist/main.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: "4000"
+      - key: COOKIE_SECURE
+        value: "true"
+      # Set these in the Render dashboard (marked sync:false so they are secret):
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false # e.g. https://<your-app>.vercel.app
+      # Optional — leave blank to use the console notifier:
+      - key: RESEND_API_KEY
+        sync: false
+      - key: NOTIFY_EMAIL_FROM
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
