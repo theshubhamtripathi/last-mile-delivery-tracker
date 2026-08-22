@@ -1,87 +1,82 @@
 'use client';
 
 import { useState } from 'react';
-import { authApi, ApiError, type SessionUser } from '@/lib/api';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { authApi, ApiError } from '@/lib/api';
+import { useAuth, homeForRole } from '@/lib/auth';
+import { Button, Card, Eyebrow, ErrorNote, Field, Input } from '@/components/ui';
+
+const DEMO = [
+  { role: 'Admin', email: 'admin@demo.io' },
+  { role: 'Customer', email: 'customer@demo.io' },
+  { role: 'Agent', email: 'agent@demo.io' },
+];
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { refresh } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading'>('idle');
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus('loading');
+    setLoading(true);
     setError(null);
-    setUser(null);
     try {
-      const res = await authApi.login(email, password);
-      setUser(res.user);
+      const { user } = await authApi.login(email, password);
+      await refresh();
+      router.replace(homeForRole(user.role));
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : 'Unable to reach the server',
-      );
-    } finally {
-      setStatus('idle');
+      setError(err instanceof ApiError ? err.message : 'Unable to reach the server');
+      setLoading(false);
     }
+  }
+
+  function quickFill(demoEmail: string) {
+    setEmail(demoEmail);
+    setPassword('Demo@1234');
   }
 
   return (
     <main className="mx-auto max-w-sm px-6 py-16">
-      <p className="eyebrow">Sign in</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-        Access your account
-      </h1>
+      <Eyebrow>Sign in</Eyebrow>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight">Access your account</h1>
 
-      <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-rule bg-white px-3 py-2 font-mono text-sm focus:border-stamp focus:outline-none focus:ring-2 focus:ring-stamp/40"
-          />
-        </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded border border-rule bg-white px-3 py-2 font-mono text-sm focus:border-stamp focus:outline-none focus:ring-2 focus:ring-stamp/40"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="w-full rounded border border-ink bg-ink px-4 py-2 text-paper transition-colors hover:bg-stamp hover:border-stamp disabled:opacity-60"
-        >
-          {status === 'loading' ? 'Signing in…' : 'Sign in'}
-        </button>
+      <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
+        <Field label="Email">
+          <Input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        </Field>
+        <Field label="Password">
+          <Input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Field>
+        {error && <ErrorNote>{error}</ErrorNote>}
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? 'Signing in…' : 'Sign in'}
+        </Button>
       </form>
 
-      <div aria-live="polite" className="mt-4 text-sm">
-        {error && <p className="text-consign">{error}</p>}
-        {user && (
-          <p className="text-cleared">
-            Signed in as <span className="font-mono">{user.email}</span> ·{' '}
-            {user.role}
-          </p>
-        )}
-      </div>
+      <Card className="mt-6">
+        <Eyebrow>Demo logins · password Demo@1234</Eyebrow>
+        <div className="mt-3 space-y-1">
+          {DEMO.map((d) => (
+            <button
+              key={d.email}
+              onClick={() => quickFill(d.email)}
+              className="flex w-full items-center justify-between rounded border border-rule px-3 py-1.5 text-left text-sm hover:border-stamp"
+            >
+              <span>{d.role}</span>
+              <span className="font-mono text-xs text-ink/60">{d.email}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      <p className="mt-4 text-center text-sm text-ink/60">
+        New customer? <Link href="/register" className="text-stamp underline">Create an account</Link>
+      </p>
     </main>
   );
 }

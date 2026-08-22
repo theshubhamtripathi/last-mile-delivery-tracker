@@ -201,6 +201,7 @@ export class OrdersService {
         dropZone: { select: { code: true, name: true } },
         customer: { select: { id: true, fullName: true, email: true } },
         assignedAgent: { include: { user: { select: { fullName: true } } } },
+        assignmentLogs: { orderBy: { createdAt: 'desc' }, take: 5 },
       },
     });
     if (!order) throw new AppException('ORDER_NOT_FOUND', 'Order not found', HttpStatus.NOT_FOUND);

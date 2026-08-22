@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/lib/auth';
 
 // Self-hosted at build time via next/font — no runtime external font request,
 // no extra dependency (charter §13).
@@ -30,7 +31,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${plexSans.variable} ${plexMono.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

@@ -20,6 +20,11 @@ export class AdminController {
     return this.dashboard.metrics();
   }
 
+  @Get('agents')
+  agents() {
+    return this.dashboard.listAgents();
+  }
+
   @Get('notifications')
   notificationLog(@Query('status') status?: string) {
     return this.notifications.list({ status });

@@ -5,6 +5,14 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class AdminDashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Agents with their user + zone, for the manual-assignment picker. */
+  listAgents() {
+    return this.prisma.agent.findMany({
+      orderBy: { agentCode: 'asc' },
+      include: { user: { select: { fullName: true } }, homeZone: { select: { code: true } } },
+    });
+  }
+
   /** Numbers behind the admin dashboard (rendered as hand-rolled SVG bars). */
   async metrics() {
     const [byStatus, byPickupZone, agents, delivered, totalOrders, attempts] =
