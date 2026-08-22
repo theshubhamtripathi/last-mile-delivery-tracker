@@ -1,0 +1,527 @@
+// Last-Mile Delivery Tracker — data model.
+// Design notes live in docs/schema.md; the rationale for the less obvious
+// choices (frozen pricing snapshots, denormalised activeOrderCount, the
+// append-only event log) is recorded in docs/decisions.md.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  AGENT
+  ADMIN
+}
+
+enum OrderType {
+  B2B
+  B2C
+}
+
+enum PaymentType {
+  PREPAID
+  COD
+}
+
+enum Availability {
+  AVAILABLE
+  ON_DUTY
+  OFFLINE
+}
+
+enum RateScope {
+  INTRA_ZONE
+  INTER_ZONE
+}
+
+enum ChargeableBasis {
+  ACTUAL
+  VOLUMETRIC
+}
+
+enum SurchargeCalcType {
+  FLAT
+  PERCENT_OF_FREIGHT
+  GREATER_OF
+}
+
+enum RoundingMode {
+  UP
+}
+
+enum OrderStatus {
+  CREATED
+  ASSIGNED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RESCHEDULED
+  CANCELLED
+}
+
+enum AttemptOutcome {
+  DELIVERED
+  FAILED
+}
+
+enum RescheduleStatus {
+  PENDING
+  FULFILLED
+  CANCELLED
+}
+
+enum AssignmentStrategy {
+  MANUAL
+  AUTO
+  REASSIGN_AFTER_FAILURE
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Identity
+// ─────────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  phone        String
+  role         Role
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customerProfile  CustomerProfile?
+  agent            Agent?
+  addresses        Address[]
+  ordersAsCustomer Order[]           @relation("OrderCustomer")
+  ordersCreated    Order[]           @relation("OrderCreatedBy")
+  statusEvents     OrderStatusEvent[]
+  reschedules      RescheduleRequest[]
+  assignmentsMade  AssignmentLog[]
+  auditLogs        AuditLog[]
+
+  @@index([role])
+}
+
+model CustomerProfile {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName      String?
+  defaultOrderType OrderType @default(B2C)
+  gstin            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Agent {
+  id                  String       @id @default(cuid())
+  userId              String       @unique
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentCode           String       @unique
+  availability        Availability @default(OFFLINE)
+  homeZoneId          String
+  homeZone            Zone         @relation(fields: [homeZoneId], references: [id])
+  currentLat          Float?
+  currentLng          Float?
+  locationUpdatedAt   DateTime?
+  // Denormalised for fast candidate filtering; mutated only inside the same
+  // transaction as an assignment or a terminal status change (docs/decisions.md).
+  activeOrderCount    Int          @default(0)
+  maxConcurrentOrders Int          @default(5)
+  vehicleType         String       @default("BIKE")
+  // Optimistic lock: bumped on every assignment write to prevent double-booking.
+  version             Int          @default(0)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  orders          Order[]
+  attempts        DeliveryAttempt[]
+  assignmentLogs  AssignmentLog[]
+
+  @@index([homeZoneId, availability])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Geography and zoning
+// ─────────────────────────────────────────────────────────────────────────
+
+model Zone {
+  id       String  @id @default(cuid())
+  name     String
+  code     String  @unique
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  serviceAreas       ServiceArea[]
+  agentsHome         Agent[]
+  rateCardsOrigin    RateCard[] @relation("RateCardOriginZone")
+  rateCardsDest      RateCard[] @relation("RateCardDestZone")
+  ordersPickup       Order[]    @relation("OrderPickupZone")
+  ordersDrop         Order[]    @relation("OrderDropZone")
+}
+
+model ServiceArea {
+  id            String  @id @default(cuid())
+  name          String
+  pincode       String  @unique
+  city          String
+  state         String
+  zoneId        String
+  zone          Zone    @relation(fields: [zoneId], references: [id])
+  centroidLat   Float
+  centroidLng   Float
+  isServiceable Boolean @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([pincode])
+  @@index([zoneId])
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  ownerUserId  String?
+  ownerUser    User?   @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  label        String?
+  line1        String
+  line2        String?
+  landmark     String?
+  pincode      String
+  city         String
+  state        String
+  lat          Float?
+  lng          Float?
+  contactName  String
+  contactPhone String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  pickupForOrders Order[] @relation("OrderPickupAddress")
+  dropForOrders   Order[] @relation("OrderDropAddress")
+
+  @@index([pincode])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Pricing configuration (admin-editable, effective-dated)
+// ─────────────────────────────────────────────────────────────────────────
+
+model PricingConfig {
+  id                       String       @id @default(cuid())
+  volumetricDivisor        Int          @default(5000)
+  weightRoundingStepGrams  Int          @default(500)
+  roundingMode             RoundingMode @default(UP)
+  minChargeableWeightGrams Int          @default(0)
+  fuelSurchargeBasisPoints Int          @default(0)
+  taxBasisPoints           Int          @default(0)
+  effectiveFrom            DateTime
+  isActive                 Boolean      @default(true)
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+
+  orders Order[]
+
+  @@index([isActive, effectiveFrom])
+}
+
+model RateCard {
+  id                String    @id @default(cuid())
+  name              String
+  orderType         OrderType
+  scope             RateScope
+  originZoneId      String?
+  originZone        Zone?     @relation("RateCardOriginZone", fields: [originZoneId], references: [id])
+  destinationZoneId String?
+  destinationZone   Zone?     @relation("RateCardDestZone", fields: [destinationZoneId], references: [id])
+  effectiveFrom     DateTime
+  effectiveTo       DateTime?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  slabs  RateSlab[]
+  orders Order[]
+
+  @@index([orderType, scope, effectiveFrom])
+  @@index([originZoneId, destinationZoneId])
+}
+
+model RateSlab {
+  id              String   @id @default(cuid())
+  rateCardId      String
+  rateCard        RateCard @relation(fields: [rateCardId], references: [id], onDelete: Cascade)
+  fromWeightGrams Int
+  toWeightGrams   Int? // null = open-ended top slab
+  flatPaise       Int      @default(0)
+  perKgPaise      Int      @default(0)
+  sequence        Int
+
+  @@index([rateCardId, sequence])
+}
+
+model SurchargeRule {
+  id                String            @id @default(cuid())
+  code              String // e.g. "COD"
+  orderType         OrderType
+  calcType          SurchargeCalcType
+  flatPaise         Int?
+  percentBasisPoints Int?
+  minPaise          Int?
+  maxPaise          Int?
+  effectiveFrom     DateTime
+  effectiveTo       DateTime?
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([code, orderType, isActive])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Orders
+// ─────────────────────────────────────────────────────────────────────────
+
+model Order {
+  id                    String      @id @default(cuid())
+  orderNumber           String      @unique
+  customerId            String
+  customer              User        @relation("OrderCustomer", fields: [customerId], references: [id])
+  createdByUserId       String
+  createdBy             User        @relation("OrderCreatedBy", fields: [createdByUserId], references: [id])
+
+  orderType             OrderType
+  paymentType           PaymentType
+
+  pickupAddressId       String
+  pickupAddress         Address     @relation("OrderPickupAddress", fields: [pickupAddressId], references: [id])
+  dropAddressId         String
+  dropAddress           Address     @relation("OrderDropAddress", fields: [dropAddressId], references: [id])
+
+  pickupZoneId          String
+  pickupZone            Zone        @relation("OrderPickupZone", fields: [pickupZoneId], references: [id])
+  dropZoneId            String
+  dropZone              Zone        @relation("OrderDropZone", fields: [dropZoneId], references: [id])
+  rateScope             RateScope
+
+  lengthCm              Int
+  breadthCm             Int
+  heightCm              Int
+  actualWeightGrams     Int
+  volumetricWeightGrams Int
+  chargeableWeightGrams Int
+  chargeableBasis       ChargeableBasis
+
+  rateCardId            String
+  rateCard              RateCard    @relation(fields: [rateCardId], references: [id])
+  pricingConfigId       String
+  pricingConfig         PricingConfig @relation(fields: [pricingConfigId], references: [id])
+
+  freightPaise          Int
+  surchargePaise        Int
+  taxPaise              Int
+  totalPaise            Int
+  declaredValuePaise    Int         @default(0)
+  // Frozen copy of the full pricing breakdown at confirmation time. Later
+  // rate-card edits never alter a placed order's charge (docs/decisions.md).
+  pricingSnapshot       Json
+
+  currentStatus         OrderStatus @default(CREATED)
+  assignedAgentId       String?
+  assignedAgent         Agent?      @relation(fields: [assignedAgentId], references: [id])
+  promisedDate          DateTime?
+  attemptCount          Int         @default(0)
+
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  statusEvents      OrderStatusEvent[]
+  attempts          DeliveryAttempt[]
+  reschedules       RescheduleRequest[]
+  assignmentLogs    AssignmentLog[]
+  notifications     NotificationOutbox[]
+  quote             OrderQuote?
+
+  @@index([currentStatus])
+  @@index([pickupZoneId, currentStatus])
+  @@index([assignedAgentId])
+  @@index([customerId])
+}
+
+model OrderQuote {
+  id               String   @id @default(cuid())
+  quoteToken       String   @unique
+  requestPayload   Json
+  pricingSnapshot  Json
+  totalPaise       Int
+  expiresAt        DateTime
+  consumedByOrderId String? @unique
+  consumedByOrder  Order?   @relation(fields: [consumedByOrderId], references: [id])
+  createdAt        DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Tracking history (append-only) — see docs/decisions.md "immutable history"
+// ─────────────────────────────────────────────────────────────────────────
+
+model OrderStatusEvent {
+  id             String       @id @default(cuid())
+  orderId        String
+  order          Order        @relation(fields: [orderId], references: [id])
+  sequence       Int
+  fromStatus     OrderStatus?
+  toStatus       OrderStatus
+  actorUserId    String
+  actor          User         @relation(fields: [actorUserId], references: [id])
+  actorRole      Role
+  isAdminOverride Boolean     @default(false)
+  reason         String?
+  metadata       Json?
+  occurredAt     DateTime     @default(now())
+  // Per-order SHA-256 hash chain; verified by GET /orders/:id/tracking/verify.
+  previousHash   String?
+  hash           String
+  // NB: no updatedAt. A database trigger blocks UPDATE and DELETE on this table.
+
+  @@unique([orderId, sequence])
+  @@index([orderId, occurredAt])
+}
+
+model DeliveryAttempt {
+  id                String         @id @default(cuid())
+  orderId           String
+  order             Order          @relation(fields: [orderId], references: [id])
+  attemptNumber     Int
+  agentId           String
+  agent             Agent          @relation(fields: [agentId], references: [id])
+  outcome           AttemptOutcome
+  failureReasonCode String?
+  notes             String?
+  attemptedAt       DateTime       @default(now())
+
+  reschedules RescheduleRequest[]
+
+  @@index([orderId])
+}
+
+model RescheduleRequest {
+  id                String           @id @default(cuid())
+  orderId           String
+  order             Order            @relation(fields: [orderId], references: [id])
+  failedAttemptId   String
+  failedAttempt     DeliveryAttempt  @relation(fields: [failedAttemptId], references: [id])
+  requestedDate     DateTime
+  requestedByUserId String
+  requestedBy       User             @relation(fields: [requestedByUserId], references: [id])
+  status            RescheduleStatus @default(PENDING)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([orderId])
+}
+
+model AssignmentLog {
+  id                String             @id @default(cuid())
+  orderId           String
+  order             Order              @relation(fields: [orderId], references: [id])
+  agentId           String?
+  agent             Agent?             @relation(fields: [agentId], references: [id])
+  strategy          AssignmentStrategy
+  // Every candidate with score components, so the admin "why this agent" panel
+  // can render winner, runners-up, and rejected agents with reasons.
+  candidateSnapshot Json
+  selectionReason   String
+  assignedByUserId  String?
+  assignedBy        User?              @relation(fields: [assignedByUserId], references: [id])
+  createdAt         DateTime           @default(now())
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Operations
+// ─────────────────────────────────────────────────────────────────────────
+
+model NotificationOutbox {
+  id                String              @id @default(cuid())
+  orderId           String?
+  order             Order?              @relation(fields: [orderId], references: [id])
+  channel           NotificationChannel
+  templateKey       String
+  recipient         String
+  payload           Json
+  status            NotificationStatus  @default(QUEUED)
+  attempts          Int                 @default(0)
+  lastError         String?
+  providerMessageId String?
+  sentAt            DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([status])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String
+  actor       User     @relation(fields: [actorUserId], references: [id])
+  entityType  String
+  entityId    String
+  action      String
+  beforeState Json?
+  afterState  Json?
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+model IdempotencyRecord {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  endpoint     String
+  requestHash  String
+  responseBody Json
+  createdAt    DateTime @default(now())
+}
+
+// Weights for the auto-assignment score live in a row, never in code (charter §8).
+model AssignmentConfig {
+  id                   String   @id @default(cuid())
+  wDistance            Int      @default(60)
+  wLoad                Int      @default(30)
+  wStaleness           Int      @default(10)
+  // Home-zone fallback penalty (0..1 scaled by 1000) when an agent has no live location.
+  noLocationPenaltyMilli Int    @default(500)
+  maxAssignRadiusKm    Int      @default(50)
+  isActive             Boolean  @default(true)
+  effectiveFrom        DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
