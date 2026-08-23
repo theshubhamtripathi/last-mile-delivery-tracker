@@ -25,6 +25,12 @@ export class EnvironmentVariables {
   @IsNumberString()
   API_PORT = '4000';
 
+  // Injected by the hosting platform (Render/Railway/…); takes precedence over
+  // API_PORT at bind time. Optional so local dev without it still validates.
+  @IsOptional()
+  @IsNumberString()
+  PORT?: string;
+
   @IsString()
   DATABASE_URL!: string;
 

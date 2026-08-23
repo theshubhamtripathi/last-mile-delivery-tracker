@@ -17,10 +17,12 @@ services:
     startCommand: node apps/api/dist/main.js
     healthCheckPath: /health
     envVars:
+      - key: NODE_VERSION
+        value: "20"
       - key: NODE_ENV
         value: production
-      - key: API_PORT
-        value: "4000"
+      # Render injects PORT automatically; the app binds it. COOKIE_SECURE=true
+      # switches the session cookies to SameSite=None; Secure for cross-site auth.
       - key: COOKIE_SECURE
         value: "true"
       # Set these in the Render dashboard (marked sync:false so they are secret):

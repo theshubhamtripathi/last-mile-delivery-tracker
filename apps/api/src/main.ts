@@ -46,10 +46,15 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
 
-  const port = Number(config.get<string>('API_PORT') ?? '4000');
-  await app.listen(port);
+  // Hosting platforms (Render, Railway, …) inject PORT and expect the app to
+  // bind it; fall back to API_PORT for local dev. Bind 0.0.0.0 so the platform
+  // health check can reach the container.
+  const port = Number(
+    config.get<string>('PORT') ?? config.get<string>('API_PORT') ?? '4000',
+  );
+  await app.listen(port, '0.0.0.0');
   // eslint-disable-next-line no-console
-  console.log(`API listening on http://localhost:${port} (docs at /docs)`);
+  console.log(`API listening on port ${port} (docs at /docs)`);
 }
 
 void bootstrap();

@@ -152,12 +152,13 @@ rejected by the database trigger.
 
 ## Deployment
 
-The API deploys to **Render** ([`render.yaml`](render.yaml)) against a **Neon**
-PostgreSQL database; the web app deploys to **Vercel** ([`apps/web/vercel.json`](apps/web/vercel.json)).
-Set `DATABASE_URL`, `DIRECT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and
-`CORS_ORIGIN` (the Vercel URL) as secrets; set the web app's
-`NEXT_PUBLIC_API_BASE_URL` to the Render URL + `/api/v1`. Migrations run in the
-build; seed once with `npm run seed` against the production `DATABASE_URL`.
+Step-by-step guide: **[`docs/deployment.md`](docs/deployment.md)**. In short, the
+API deploys to **Render** ([`render.yaml`](render.yaml)) against a **Neon**
+PostgreSQL database, and the web app deploys to **Vercel**
+([`apps/web/vercel.json`](apps/web/vercel.json)). The app binds the platform's
+`$PORT` and, with `COOKIE_SECURE=true`, issues `SameSite=None; Secure` cookies so
+the Vercel frontend authenticates against the Render API cross-site. Migrations
+run in the build; seed once with `npm run seed`.
 
 > **CI:** the GitHub Actions workflow (typecheck/lint/test/build) is committed
 > locally; publishing it needs the `workflow` OAuth scope

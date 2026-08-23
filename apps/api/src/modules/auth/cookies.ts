@@ -11,10 +11,14 @@ const REFRESH_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 function baseOptions(config: ConfigService) {
   const secure = config.get<string>('COOKIE_SECURE') === 'true';
+  // The hosted demo serves the web app and API on different sites (vercel.app vs
+  // onrender.com), so the session cookies must be SameSite=None to be sent on
+  // cross-site requests — which the browser only allows when Secure. Locally
+  // (same-site, http) we use Lax. Secure implies a production/HTTPS deployment.
   return {
     httpOnly: true, // never readable by JS — mitigates XSS token theft
     secure,
-    sameSite: 'lax' as const,
+    sameSite: (secure ? 'none' : 'lax') as 'none' | 'lax',
     path: '/',
   };
 }
