@@ -23,10 +23,12 @@ const NAV: Record<Role, { href: string; label: string }[]> = {
   ],
 };
 
-/**
- * Shell for authenticated pages: role-based nav plus a client-side auth guard
- * that bounces unauthenticated visitors (or the wrong role) to /login.
- */
+const ROLE_TONE: Record<Role, string> = {
+  ADMIN: 'text-stamp',
+  AGENT: 'text-cleared',
+  CUSTOMER: 'text-sky',
+};
+
 export function AppShell({
   children,
   requireRole,
@@ -46,7 +48,7 @@ export function AppShell({
 
   if (loading || !user) {
     return (
-      <div className="mx-auto max-w-md px-6 py-20">
+      <div className="mx-auto max-w-md px-6 py-24">
         <Spinner label="Checking your session…" />
       </div>
     );
@@ -56,36 +58,54 @@ export function AppShell({
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-rule bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3">
-          <Link href="/" className="font-mono text-sm font-semibold tracking-tight">
-            LMD
+      <header className="sticky top-0 z-30 border-b border-line/70 bg-base/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-grad-brand font-mono text-sm font-bold text-white shadow-glow-soft">
+              L
+            </span>
+            <span className="font-semibold tracking-tight">
+              Last-Mile <span className="text-faint">Tracker</span>
+            </span>
           </Link>
-          <nav className="flex flex-1 flex-wrap gap-x-4 gap-y-1 text-sm">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`rounded px-1 py-0.5 ${
-                  pathname === l.href ? 'font-medium text-stamp' : 'text-ink/70 hover:text-ink'
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
+          <nav className="flex flex-1 flex-wrap items-center gap-1 text-sm">
+            {links.map((l) => {
+              const active = pathname === l.href;
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`rounded-lg px-3 py-1.5 transition-colors ${
+                    active
+                      ? 'bg-overlay text-ink ring-1 ring-line'
+                      : 'text-muted hover:bg-overlay/60 hover:text-ink'
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
           </nav>
-          <div className="flex items-center gap-3 text-xs text-ink/60">
-            <span className="font-mono">{user.fullName} · {user.role}</span>
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-medium leading-tight text-ink">{user.fullName}</p>
+              <p className={`font-mono text-[10px] uppercase tracking-wide ${ROLE_TONE[user.role]}`}>
+                {user.role}
+              </p>
+            </div>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-overlay font-mono text-xs font-semibold text-ink ring-1 ring-line">
+              {user.fullName.split(' ').map((w) => w[0]).slice(0, 2).join('')}
+            </span>
             <button
               onClick={() => logout().then(() => router.replace('/login'))}
-              className="rounded border border-rule px-2 py-1 hover:border-ink"
+              className="rounded-lg border border-line px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-consign/50 hover:text-consign"
             >
               Log out
             </button>
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-5 py-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-5 py-8">{children}</main>
     </div>
   );
 }

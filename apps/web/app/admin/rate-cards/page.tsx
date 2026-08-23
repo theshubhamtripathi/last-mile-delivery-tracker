@@ -45,18 +45,18 @@ export default function RateSimulatorPage() {
     <AppShell requireRole="ADMIN">
       <Eyebrow>Pricing</Eyebrow>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">Rate simulator</h1>
-      <p className="mt-1 text-sm text-ink/60">Dry-run a shipment against the active rate cards. The number matches what a customer would be quoted.</p>
+      <p className="mt-1 text-sm text-muted">Dry-run a shipment against the active rate cards. The number matches what a customer would be quoted.</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <Card className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Pickup zone">
-              <select value={form.pickupZoneId} onChange={(e) => setForm({ ...form, pickupZoneId: e.target.value })} className="mt-1 w-full rounded border border-rule bg-white px-3 py-2 font-mono text-sm">
+              <select value={form.pickupZoneId} onChange={(e) => setForm({ ...form, pickupZoneId: e.target.value })} className="mt-1 w-full rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-sm">
                 {zones.data?.map((z) => <option key={z.id} value={z.id}>{z.code}</option>)}
               </select>
             </Field>
             <Field label="Drop zone">
-              <select value={form.dropZoneId} onChange={(e) => setForm({ ...form, dropZoneId: e.target.value })} className="mt-1 w-full rounded border border-rule bg-white px-3 py-2 font-mono text-sm">
+              <select value={form.dropZoneId} onChange={(e) => setForm({ ...form, dropZoneId: e.target.value })} className="mt-1 w-full rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-sm">
                 {zones.data?.map((z) => <option key={z.id} value={z.id}>{z.code}</option>)}
               </select>
             </Field>
@@ -69,17 +69,17 @@ export default function RateSimulatorPage() {
           <Field label="Actual weight (g)"><Input type="number" value={form.actualWeightGrams} onChange={(e) => setForm({ ...form, actualWeightGrams: +e.target.value })} /></Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Order type">
-              <select value={form.orderType} onChange={(e) => setForm({ ...form, orderType: e.target.value })} className="mt-1 w-full rounded border border-rule bg-white px-3 py-2 font-mono text-sm"><option>B2C</option><option>B2B</option></select>
+              <select value={form.orderType} onChange={(e) => setForm({ ...form, orderType: e.target.value })} className="mt-1 w-full rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-sm"><option>B2C</option><option>B2B</option></select>
             </Field>
             <Field label="Payment">
-              <select value={form.paymentType} onChange={(e) => setForm({ ...form, paymentType: e.target.value })} className="mt-1 w-full rounded border border-rule bg-white px-3 py-2 font-mono text-sm"><option>PREPAID</option><option>COD</option></select>
+              <select value={form.paymentType} onChange={(e) => setForm({ ...form, paymentType: e.target.value })} className="mt-1 w-full rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-sm"><option>PREPAID</option><option>COD</option></select>
             </Field>
           </div>
           {form.paymentType === 'COD' && <Field label="Declared value (₹)"><Input type="number" value={form.declaredValueRupees} onChange={(e) => setForm({ ...form, declaredValueRupees: +e.target.value })} /></Field>}
 
           <div>
             <Eyebrow>Active rate cards</Eyebrow>
-            <ul className="mt-2 space-y-1 font-mono text-xs text-ink/60">
+            <ul className="mt-2 space-y-1 font-mono text-xs text-muted">
               {cards.data?.filter((c) => (c as { isActive: boolean }).isActive).map((c) => (
                 <li key={(c as { id: string }).id}>{(c as { name: string }).name} · {(c as { orderType: string }).orderType} · {(c as { scope: string }).scope}</li>
               ))}

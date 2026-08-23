@@ -58,7 +58,7 @@ export default function TasksPage() {
         <div className="flex gap-1">
           {['AVAILABLE', 'ON_DUTY', 'OFFLINE'].map((a) => (
             <button key={a} onClick={() => setAvailability(a)}
-              className={`rounded border px-2 py-1 font-mono text-[10px] uppercase hover:border-stamp ${availability === a ? 'border-stamp text-stamp' : 'border-rule'}`}>
+              className={`rounded border px-2 py-1 font-mono text-[10px] uppercase hover:border-stamp ${availability === a ? 'border-stamp text-stamp' : 'border-line'}`}>
               {a}
             </button>
           ))}
@@ -82,13 +82,13 @@ export default function TasksPage() {
               <div className="grid gap-2 text-sm sm:grid-cols-2">
                 <div>
                   <p className="eyebrow">Pickup · {o.pickupZone.code}</p>
-                  <p className="font-mono text-xs text-ink/70">{o.pickupAddress.line1}, {o.pickupAddress.city} {o.pickupAddress.pincode}</p>
-                  <p className="font-mono text-xs text-ink/50">{o.pickupAddress.contactName} · {o.pickupAddress.contactPhone}</p>
+                  <p className="font-mono text-xs text-muted">{o.pickupAddress.line1}, {o.pickupAddress.city} {o.pickupAddress.pincode}</p>
+                  <p className="font-mono text-xs text-faint">{o.pickupAddress.contactName} · {o.pickupAddress.contactPhone}</p>
                 </div>
                 <div>
                   <p className="eyebrow">Drop · {o.dropZone.code}</p>
-                  <p className="font-mono text-xs text-ink/70">{o.dropAddress.line1}, {o.dropAddress.city} {o.dropAddress.pincode}</p>
-                  <p className="font-mono text-xs text-ink/50">{o.dropAddress.contactName} · {o.dropAddress.contactPhone}</p>
+                  <p className="font-mono text-xs text-muted">{o.dropAddress.line1}, {o.dropAddress.city} {o.dropAddress.pincode}</p>
+                  <p className="font-mono text-xs text-faint">{o.dropAddress.contactName} · {o.dropAddress.contactPhone}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">

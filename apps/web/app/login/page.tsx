@@ -65,16 +65,16 @@ export default function LoginPage() {
             <button
               key={d.email}
               onClick={() => quickFill(d.email)}
-              className="flex w-full items-center justify-between rounded border border-rule px-3 py-1.5 text-left text-sm hover:border-stamp"
+              className="flex w-full items-center justify-between rounded border border-line px-3 py-1.5 text-left text-sm hover:border-stamp"
             >
               <span>{d.role}</span>
-              <span className="font-mono text-xs text-ink/60">{d.email}</span>
+              <span className="font-mono text-xs text-muted">{d.email}</span>
             </button>
           ))}
         </div>
       </Card>
 
-      <p className="mt-4 text-center text-sm text-ink/60">
+      <p className="mt-4 text-center text-sm text-muted">
         New customer? <Link href="/register" className="text-stamp underline">Create an account</Link>
       </p>
     </main>

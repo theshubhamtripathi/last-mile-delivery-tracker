@@ -49,7 +49,7 @@ export default function AdminDashboard() {
             </Card>
             <Card>
               <Eyebrow>Zone load (pickup)</Eyebrow>
-              <div className="mt-4"><BarChart data={data.zoneLoad.map((z) => ({ label: z.zone, value: z.count }))} color="#0E7A5F" /></div>
+              <div className="mt-4"><BarChart data={data.zoneLoad.map((z) => ({ label: z.zone, value: z.count }))} tone="cleared" /></div>
             </Card>
           </div>
 
@@ -57,12 +57,12 @@ export default function AdminDashboard() {
             <Eyebrow>Agent utilisation</Eyebrow>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b border-rule text-left font-mono text-xs uppercase tracking-wide text-ink/50">
+                <thead className="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-faint">
                   <tr><th className="px-3 py-2">Agent</th><th className="px-3 py-2">Zone</th><th className="px-3 py-2">Availability</th><th className="px-3 py-2">Load</th></tr>
                 </thead>
                 <tbody>
                   {data.agentUtilisation.map((a) => (
-                    <tr key={a.agentCode} className="border-b border-rule last:border-0">
+                    <tr key={a.agentCode} className="border-b border-line last:border-0">
                       <td className="px-3 py-2 font-mono">{a.agentCode} · {a.name}</td>
                       <td className="px-3 py-2 font-mono text-xs">{a.homeZone}</td>
                       <td className="px-3 py-2 font-mono text-xs">{a.availability}</td>

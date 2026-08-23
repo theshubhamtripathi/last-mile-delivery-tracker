@@ -45,25 +45,25 @@ function OrdersTable() {
       <Card className="mb-5">
         <div className="flex flex-wrap items-end gap-3">
           <label className="text-sm">
-            <span className="block text-xs text-ink/50">Status</span>
-            <select value={status} onChange={(e) => setFilter('status', e.target.value)} className="mt-1 rounded border border-rule bg-white px-3 py-2 font-mono text-xs">
+            <span className="block text-xs text-faint">Status</span>
+            <select value={status} onChange={(e) => setFilter('status', e.target.value)} className="mt-1 rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-xs">
               <option value="">All</option>
               {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </label>
           <label className="text-sm">
-            <span className="block text-xs text-ink/50">Zone</span>
-            <select value={zoneId} onChange={(e) => setFilter('zoneId', e.target.value)} className="mt-1 rounded border border-rule bg-white px-3 py-2 font-mono text-xs">
+            <span className="block text-xs text-faint">Zone</span>
+            <select value={zoneId} onChange={(e) => setFilter('zoneId', e.target.value)} className="mt-1 rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-xs">
               <option value="">All</option>
               {zones.data?.map((z) => <option key={z.id} value={z.id}>{z.code}</option>)}
             </select>
           </label>
           <label className="text-sm">
-            <span className="block text-xs text-ink/50">Search order #</span>
-            <input defaultValue={q} onKeyDown={(e) => e.key === 'Enter' && setFilter('q', (e.target as HTMLInputElement).value)} placeholder="LMD-…" className="mt-1 rounded border border-rule bg-white px-3 py-2 font-mono text-xs" />
+            <span className="block text-xs text-faint">Search order #</span>
+            <input defaultValue={q} onKeyDown={(e) => e.key === 'Enter' && setFilter('q', (e.target as HTMLInputElement).value)} placeholder="LMD-…" className="mt-1 rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-xs" />
           </label>
           {(status || zoneId || q) && (
-            <button onClick={() => router.push('/admin/orders')} className="rounded border border-rule px-3 py-2 text-xs hover:border-ink">Clear</button>
+            <button onClick={() => router.push('/admin/orders')} className="rounded border border-line px-3 py-2 text-xs hover:border-stamp/50">Clear</button>
           )}
         </div>
       </Card>
@@ -75,7 +75,7 @@ function OrdersTable() {
         <Card className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-rule text-left font-mono text-xs uppercase tracking-wide text-ink/50">
+              <thead className="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-faint">
                 <tr>
                   <th className="px-4 py-3">Order</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3">Route</th>
                   <th className="px-4 py-3">Status</th><th className="px-4 py-3">Agent</th><th className="px-4 py-3">Charge</th><th className="px-4 py-3">Placed</th><th />
@@ -83,14 +83,14 @@ function OrdersTable() {
               </thead>
               <tbody>
                 {orders.data.data.map((o) => (
-                  <tr key={o.id} className="border-b border-rule last:border-0 hover:bg-paper">
+                  <tr key={o.id} className="border-b border-line last:border-0 hover:bg-overlay/60">
                     <td className="px-4 py-3 font-mono">{o.orderNumber}</td>
                     <td className="px-4 py-3">{o.customer?.fullName ?? '—'}</td>
                     <td className="px-4 py-3 font-mono text-xs">{o.pickupZone?.code} → {o.dropZone?.code}</td>
                     <td className="px-4 py-3"><StatusPill status={o.currentStatus} /></td>
                     <td className="px-4 py-3 text-xs">{o.assignedAgent?.user.fullName ?? '—'}</td>
                     <td className="px-4 py-3 font-mono tabular-nums">{formatINR(o.totalPaise)}</td>
-                    <td className="px-4 py-3 text-ink/60">{formatDate(o.createdAt)}</td>
+                    <td className="px-4 py-3 text-muted">{formatDate(o.createdAt)}</td>
                     <td className="px-4 py-3 text-right"><Link href={`/admin/orders/${o.id}`} className="text-stamp hover:underline">Manage</Link></td>
                   </tr>
                 ))}

@@ -3,26 +3,97 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background-color: theme('colors.paper');
+  background-color: theme('colors.base');
   color: theme('colors.ink');
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+  background-image: theme('backgroundImage.mesh');
+  background-attachment: fixed;
 }
 
-/* Section eyebrow — condensed, uppercase, wide tracking (design direction). */
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.72rem;
-  color: theme('colors.ink' / 60%);
+@layer components {
+  /* Section eyebrow — condensed, uppercase, wide tracking. */
+  .eyebrow {
+    @apply text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-faint;
+  }
+
+  /* Glassmorphism surface. */
+  .glass {
+    @apply rounded-xl border border-line/80 bg-raised/70 shadow-card backdrop-blur-xl;
+  }
+  .glass-hover {
+    @apply transition-all duration-300 hover:border-stamp/40 hover:shadow-glow-soft;
+  }
+
+  .gradient-text {
+    @apply bg-grad-brand bg-clip-text text-transparent;
+  }
+
+  /* Data typography — monospace, tabular. */
+  .data {
+    @apply font-mono tabular-nums;
+  }
+
+  /* Skeleton shimmer block. */
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-overlay/60;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.06),
+      transparent
+    );
+    animation: shimmer 1.6s infinite;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: theme('colors.line');
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.faint');
+  background-clip: content-box;
+}
+
+/* Autofill on dark inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: theme('colors.ink');
+  -webkit-box-shadow: 0 0 0px 1000px theme('colors.overlay') inset;
+  caret-color: theme('colors.ink');
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    animation: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

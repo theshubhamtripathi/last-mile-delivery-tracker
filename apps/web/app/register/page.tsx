@@ -54,7 +54,7 @@ export default function RegisterPage() {
           {loading ? 'Creating…' : 'Create account'}
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-ink/60">
+      <p className="mt-4 text-center text-sm text-muted">
         Already have an account? <Link href="/login" className="text-stamp underline">Sign in</Link>
       </p>
     </main>

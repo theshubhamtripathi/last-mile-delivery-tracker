@@ -1,5 +1,9 @@
 # Last-Mile Delivery Tracker
 
+**🔴 Live demo:** https://last-mile-delivery-tracker-web-alpha.vercel.app  ·  **API docs (Swagger):** https://lmd-api.onrender.com/docs  ·  **Public tracking (no login):** [/track/LMD-2608-000001](https://last-mile-delivery-tracker-web-alpha.vercel.app/track/LMD-2608-000001)
+
+> The API runs on a Render free instance — the first request after a period of inactivity can take ~30–50 s to wake, then it's fast.
+
 A production-shaped last-mile logistics platform: customers and admins create
 delivery orders, charges are computed by a **fully configurable rate engine**,
 delivery agents are assigned **manually or automatically with an explainable

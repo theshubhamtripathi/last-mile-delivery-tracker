@@ -76,7 +76,7 @@ export default function NewOrderPage() {
     <AppShell requireRole="CUSTOMER">
       <Eyebrow>New shipment</Eyebrow>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">Create an order</h1>
-      <ol className="mt-3 flex gap-2 font-mono text-xs uppercase tracking-wide text-ink/50">
+      <ol className="mt-3 flex gap-2 font-mono text-xs uppercase tracking-wide text-faint">
         {['Addresses', 'Package', 'Review'].map((s, i) => (
           <li key={s} className={step === i + 1 ? 'text-stamp' : ''}>{i + 1}. {s}{i < 2 ? ' →' : ''}</li>
         ))}
@@ -104,12 +104,12 @@ export default function NewOrderPage() {
               <Field label="Actual weight (grams)"><Input type="number" value={pkg.actualWeightGrams} onChange={(e) => setPkg({ ...pkg, actualWeightGrams: +e.target.value })} /></Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Order type">
-                  <select className="mt-1 w-full rounded border border-rule bg-white px-3 py-2 font-mono text-sm" value={pkg.orderType} onChange={(e) => setPkg({ ...pkg, orderType: e.target.value })}>
+                  <select className="mt-1 w-full rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-sm" value={pkg.orderType} onChange={(e) => setPkg({ ...pkg, orderType: e.target.value })}>
                     <option>B2C</option><option>B2B</option>
                   </select>
                 </Field>
                 <Field label="Payment">
-                  <select className="mt-1 w-full rounded border border-rule bg-white px-3 py-2 font-mono text-sm" value={pkg.paymentType} onChange={(e) => setPkg({ ...pkg, paymentType: e.target.value })}>
+                  <select className="mt-1 w-full rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-sm" value={pkg.paymentType} onChange={(e) => setPkg({ ...pkg, paymentType: e.target.value })}>
                     <option>PREPAID</option><option>COD</option>
                   </select>
                 </Field>
@@ -126,11 +126,11 @@ export default function NewOrderPage() {
 
           {step === 3 && (
             <Card className="space-y-4">
-              <p className="text-sm text-ink/70">
+              <p className="text-sm text-muted">
                 Review the charge on the right — it is locked to a quote. Confirming re-verifies the price;
                 if a rate changed you will be asked to re-quote.
               </p>
-              <div className="font-mono text-xs text-ink/60">
+              <div className="font-mono text-xs text-muted">
                 {pickup.city} ({pickup.pincode}) → {drop.city} ({drop.pincode})
               </div>
               {submitErr && <ErrorNote>{submitErr}</ErrorNote>}
@@ -147,7 +147,7 @@ export default function NewOrderPage() {
           {quoteErr && <ErrorNote>{quoteErr}</ErrorNote>}
           {!quoteErr && quote && <WaybillPanel breakdown={quote.breakdown} />}
           {!quoteErr && !quote && (
-            <Card><p className="text-sm text-ink/50">{quoting ? 'Pricing…' : 'Enter valid pincodes and package details to see the live charge.'}</p></Card>
+            <Card><p className="text-sm text-faint">{quoting ? 'Pricing…' : 'Enter valid pincodes and package details to see the live charge.'}</p></Card>
           )}
         </div>
       </div>

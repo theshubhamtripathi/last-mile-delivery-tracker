@@ -53,7 +53,7 @@ export default function AdminOrderDetail({ params }: { params: Promise<{ id: str
             <div>
               <Eyebrow>Manage order</Eyebrow>
               <h1 className="mt-1 font-mono text-2xl font-semibold tracking-tight">{order.data.orderNumber}</h1>
-              <p className="mt-1 text-xs text-ink/60">{order.data.customer.fullName} · {order.data.pickupZone.code} → {order.data.dropZone.code}</p>
+              <p className="mt-1 text-xs text-muted">{order.data.customer.fullName} · {order.data.pickupZone.code} → {order.data.dropZone.code}</p>
             </div>
             <StatusPill status={order.data.currentStatus} />
           </div>
@@ -69,13 +69,13 @@ export default function AdminOrderDetail({ params }: { params: Promise<{ id: str
               {/* Assignment */}
               <Card className="space-y-3">
                 <Eyebrow>Assignment</Eyebrow>
-                <p className="text-sm text-ink/70">Currently: {order.data.assignedAgent ? `${order.data.assignedAgent.agentCode} · ${order.data.assignedAgent.user.fullName}` : 'unassigned'}</p>
+                <p className="text-sm text-muted">Currently: {order.data.assignedAgent ? `${order.data.assignedAgent.agentCode} · ${order.data.assignedAgent.user.fullName}` : 'unassigned'}</p>
                 <div className="flex flex-wrap items-end gap-2">
                   <Button onClick={() => run(() => ordersApi.assign(id, { strategy: 'AUTO' }), 'Auto-assigned')} disabled={busy}>Auto-assign</Button>
                   <div className="flex items-end gap-2">
                     <label className="text-sm">
-                      <span className="block text-xs text-ink/50">Manual</span>
-                      <select value={agentId} onChange={(e) => setAgentId(e.target.value)} className="mt-1 rounded border border-rule bg-white px-3 py-2 font-mono text-xs">
+                      <span className="block text-xs text-faint">Manual</span>
+                      <select value={agentId} onChange={(e) => setAgentId(e.target.value)} className="mt-1 rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-xs">
                         <option value="">Pick agent…</option>
                         {agents.data?.map((a) => <option key={a.id} value={a.id}>{a.agentCode} · {a.homeZone.code} · {a.activeOrderCount}/{a.maxConcurrentOrders} · {a.availability}</option>)}
                       </select>
@@ -89,16 +89,16 @@ export default function AdminOrderDetail({ params }: { params: Promise<{ id: str
               {latestLog && (
                 <Card>
                   <Eyebrow>Why this agent · {latestLog.strategy}</Eyebrow>
-                  <p className="mt-2 text-xs text-ink/70">{latestLog.selectionReason}</p>
+                  <p className="mt-2 text-xs text-muted">{latestLog.selectionReason}</p>
                   {latestLog.candidateSnapshot.candidates && latestLog.candidateSnapshot.candidates.length > 0 && (
                     <div className="mt-3 overflow-x-auto">
                       <table className="w-full text-xs">
-                        <thead className="border-b border-rule text-left font-mono uppercase text-ink/50">
+                        <thead className="border-b border-line text-left font-mono uppercase text-faint">
                           <tr><th className="px-2 py-1">Agent</th><th className="px-2 py-1">Dist km</th><th className="px-2 py-1">Load</th><th className="px-2 py-1">Stale</th><th className="px-2 py-1">Score</th></tr>
                         </thead>
                         <tbody>
                           {latestLog.candidateSnapshot.candidates.map((c, i) => (
-                            <tr key={c.agentCode} className={`border-b border-rule last:border-0 ${i === 0 ? 'bg-cleared/5 font-medium' : ''}`}>
+                            <tr key={c.agentCode} className={`border-b border-line last:border-0 ${i === 0 ? 'bg-cleared/5 font-medium' : ''}`}>
                               <td className="px-2 py-1 font-mono">{c.agentCode}{i === 0 ? ' ✓' : ''}{c.usedLiveLocation ? '' : ' (home)'}</td>
                               <td className="px-2 py-1 font-mono">{c.distanceKm}</td>
                               <td className="px-2 py-1 font-mono">{c.loadRatio}</td>
@@ -111,7 +111,7 @@ export default function AdminOrderDetail({ params }: { params: Promise<{ id: str
                     </div>
                   )}
                   {latestLog.candidateSnapshot.rejected && latestLog.candidateSnapshot.rejected.length > 0 && (
-                    <p className="mt-2 text-xs text-ink/50">Rejected: {latestLog.candidateSnapshot.rejected.map((r) => `${r.agentCode} (${r.reason})`).join(', ')}</p>
+                    <p className="mt-2 text-xs text-faint">Rejected: {latestLog.candidateSnapshot.rejected.map((r) => `${r.agentCode} (${r.reason})`).join(', ')}</p>
                   )}
                 </Card>
               )}
@@ -119,11 +119,11 @@ export default function AdminOrderDetail({ params }: { params: Promise<{ id: str
               {/* Override */}
               <Card className="space-y-3">
                 <Eyebrow>Status override</Eyebrow>
-                <p className="text-xs text-ink/60">Overrides are flagged in the timeline and audit log. A reason is required.</p>
+                <p className="text-xs text-muted">Overrides are flagged in the timeline and audit log. A reason is required.</p>
                 <div className="flex flex-wrap items-end gap-2">
                   <label className="text-sm">
-                    <span className="block text-xs text-ink/50">Set status</span>
-                    <select value={overrideStatus} onChange={(e) => setOverrideStatus(e.target.value as OrderStatus)} className="mt-1 rounded border border-rule bg-white px-3 py-2 font-mono text-xs">
+                    <span className="block text-xs text-faint">Set status</span>
+                    <select value={overrideStatus} onChange={(e) => setOverrideStatus(e.target.value as OrderStatus)} className="mt-1 rounded border border-line bg-overlay/60 px-3 py-2 font-mono text-xs">
                       {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </label>

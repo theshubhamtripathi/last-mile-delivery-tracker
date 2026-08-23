@@ -1,29 +1,44 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
 /**
- * Hand-rolled horizontal SVG/CSS bars — a charting library is ~500 KB for a
- * handful of bars (charter §3). On-palette, accessible labels.
+ * Hand-rolled animated bars — a charting library is ~500 KB for a handful of
+ * bars (charter §3). Bars grow on mount for a bit of life.
  */
 export function BarChart({
   data,
-  color = 'var(--bar, #1B4DE4)',
+  tone = 'brand',
 }: {
   data: { label: string; value: number }[];
-  color?: string;
+  tone?: 'brand' | 'cleared' | 'hold';
 }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const max = Math.max(1, ...data.map((d) => d.value));
+  const fill = {
+    brand: 'bg-grad-brand',
+    cleared: 'bg-gradient-to-r from-cleared/80 to-cleared',
+    hold: 'bg-gradient-to-r from-hold/80 to-hold',
+  }[tone];
+
   return (
-    <div className="space-y-2" style={{ ['--bar' as string]: color }}>
-      {data.map((d) => (
+    <div className="space-y-2.5">
+      {data.map((d, i) => (
         <div key={d.label} className="flex items-center gap-3">
-          <span className="w-36 shrink-0 truncate font-mono text-xs text-ink/70">{d.label}</span>
-          <div className="h-4 flex-1 overflow-hidden rounded-sm bg-paper">
+          <span className="w-32 shrink-0 truncate font-mono text-xs text-muted">{d.label}</span>
+          <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-overlay/70">
             <div
-              className="h-full rounded-sm"
-              style={{ width: `${(d.value / max) * 100}%`, backgroundColor: color, minWidth: d.value > 0 ? 4 : 0 }}
+              className={`h-full rounded-full ${fill} transition-[width] duration-700 ease-out`}
+              style={{
+                width: mounted ? `${Math.max((d.value / max) * 100, d.value > 0 ? 3 : 0)}%` : '0%',
+                transitionDelay: `${i * 60}ms`,
+              }}
               role="img"
               aria-label={`${d.label}: ${d.value}`}
             />
           </div>
-          <span className="w-10 text-right font-mono text-xs tabular-nums text-ink">{d.value}</span>
+          <span className="w-8 text-right font-mono text-xs tabular-nums text-ink">{d.value}</span>
         </div>
       ))}
     </div>

@@ -58,7 +58,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <div>
               <Eyebrow>Order</Eyebrow>
               <h1 className="mt-1 font-mono text-2xl font-semibold tracking-tight">{order.data.orderNumber}</h1>
-              <p className="mt-1 font-mono text-xs text-ink/60">
+              <p className="mt-1 font-mono text-xs text-muted">
                 {order.data.pickupZone.code} → {order.data.dropZone.code} · promised {formatDate(order.data.promisedDate)}
               </p>
             </div>
@@ -82,7 +82,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                   </Field>
                   <Button onClick={reschedule} disabled={!date || busy}>{busy ? 'Rescheduling…' : 'Reschedule delivery'}</Button>
-                  {msg && <p className="text-xs text-ink/70">{msg}</p>}
+                  {msg && <p className="text-xs text-muted">{msg}</p>}
                 </Card>
               )}
               {msg && order.data.currentStatus !== 'FAILED' && <p className="text-xs text-cleared">{msg}</p>}
