@@ -19,11 +19,25 @@ async function bootstrap(): Promise<void> {
   // Health lives at the root; everything else under /api/v1.
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'health/ready'] });
 
-  const origins = (config.get<string>('CORS_ORIGIN') ?? 'http://localhost:3000')
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-  app.enableCors({ origin: origins, credentials: true });
+  // Normalise (drop trailing slash, lowercase) so a stray slash or casing in the
+  // CORS_ORIGIN env value can't silently break cross-site auth.
+  const normalise = (u: string) => u.trim().replace(/\/+$/, '').toLowerCase();
+  const allowed = new Set(
+    (config.get<string>('CORS_ORIGIN') ?? 'http://localhost:3000')
+      .split(',')
+      .map(normalise)
+      .filter(Boolean),
+  );
+  // eslint-disable-next-line no-console
+  console.log(`CORS allowed origins: ${[...allowed].join(', ')}`);
+  app.enableCors({
+    origin: (origin, cb) => {
+      // No Origin header = same-origin or a non-browser client (curl, health).
+      if (!origin || allowed.has(normalise(origin))) return cb(null, true);
+      return cb(null, false);
+    },
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
