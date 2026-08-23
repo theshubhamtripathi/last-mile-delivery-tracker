@@ -66,9 +66,13 @@ export class AssignmentService {
       if (agentRow.activeOrderCount >= agentRow.maxConcurrentOrders) {
         throw new AppException('AGENT_AT_CAPACITY', 'Agent is at capacity', HttpStatus.CONFLICT);
       }
+      // Capacity is gated by activeOrderCount < maxConcurrentOrders, so an
+      // assigned agent stays AVAILABLE for further orders until they hit
+      // capacity or manually go ON_DUTY/OFFLINE. (Previously this flipped them to
+      // ON_DUTY, which wrongly made them ineligible for a second concurrent order.)
       const updated = await tx.agent.updateMany({
         where: { id: agentId, version: agentRow.version },
-        data: { activeOrderCount: { increment: 1 }, version: { increment: 1 }, availability: 'ON_DUTY' },
+        data: { activeOrderCount: { increment: 1 }, version: { increment: 1 } },
       });
       if (updated.count !== 1) {
         throw new AppException('ASSIGNMENT_CONFLICT', 'Agent was modified concurrently; retry', HttpStatus.CONFLICT);
