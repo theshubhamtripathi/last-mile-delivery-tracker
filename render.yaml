@@ -8,8 +8,11 @@ services:
     plan: free
     region: singapore
     branch: main
+    # --include=dev forces devDependencies (TypeScript, Nest CLI, Prisma) even
+    # though NODE_ENV=production, so the build uses the pinned toolchain rather
+    # than any newer global tools on the build image.
     buildCommand: >
-      npm ci &&
+      npm ci --include=dev &&
       npm run build --workspace @lmd/shared &&
       npm run prisma:generate --workspace @lmd/api &&
       npm run build --workspace @lmd/api &&
