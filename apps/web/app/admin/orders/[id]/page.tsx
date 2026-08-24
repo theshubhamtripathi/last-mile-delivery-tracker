@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { ordersApi, adminApi, ApiError, type PricingBreakdown, type OrderStatus, type TimelineEvent } from '@/lib/api';
 import { useAsync } from '@/lib/hooks';
 import { AppShell } from '@/components/AppShell';
@@ -22,8 +22,8 @@ interface AdminOrder {
 
 const STATUSES: OrderStatus[] = ['CREATED', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'FAILED', 'RESCHEDULED', 'CANCELLED'];
 
-export default function AdminOrderDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function AdminOrderDetail({ params }: { params: { id: string } }) {
+  const { id } = params;
   const order = useAsync(() => ordersApi.get(id) as unknown as Promise<AdminOrder>, [id]);
   const timeline = useAsync(() => ordersApi.tracking(id) as Promise<TimelineEvent[]>, [id]);
   const agents = useAsync(() => adminApi.agents());
