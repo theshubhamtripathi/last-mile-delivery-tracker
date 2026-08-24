@@ -1,6 +1,5 @@
 'use client';
 
-import { use } from 'react';
 import Link from 'next/link';
 import { publicApi, type TimelineEvent, type OrderStatus } from '@/lib/api';
 import { useAsync } from '@/lib/hooks';
@@ -24,8 +23,8 @@ interface TrackData {
   timeline: TimelineEvent[];
 }
 
-export default function TrackPage({ params }: { params: Promise<{ trackingNumber: string }> }) {
-  const { trackingNumber } = use(params);
+export default function TrackPage({ params }: { params: { trackingNumber: string } }) {
+  const { trackingNumber } = params;
   const { data, loading, error } = useAsync<TrackData>(
     () => publicApi.track(trackingNumber) as unknown as Promise<TrackData>,
     [trackingNumber],
