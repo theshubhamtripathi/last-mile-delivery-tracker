@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { ordersApi, ApiError, type PricingBreakdown, type OrderStatus, type TimelineEvent } from '@/lib/api';
 import { useAsync } from '@/lib/hooks';
 import { AppShell } from '@/components/AppShell';
@@ -23,8 +23,8 @@ interface OrderDetail {
   promisedDate: string | null;
 }
 
-export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function OrderDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const order = useAsync(() => ordersApi.get(id) as unknown as Promise<OrderDetail>, [id]);
   const timeline = useAsync(() => ordersApi.tracking(id) as Promise<TimelineEvent[]>, [id]);
   const verify = useAsync(() => ordersApi.verify(id), [id]);
